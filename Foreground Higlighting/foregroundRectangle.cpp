@@ -10,59 +10,68 @@ using cv::Rect;
 
 Mat img;
 
- 
-void on_mouse(int event,int x,int y,int,void*)
-{
-	static Point cor1,cor2;
+
+void on_mouse(int event,int x,int y,int,void*){
+	static Point firstCorner,secondCorner;
     static Rect box;
-    static bool firstPoint=false, secondPoint=false;
+    static bool firstSelected=false, secondSelected=false;
 
     //Click handling
     if(event==CV_EVENT_LBUTTONDOWN){
+
         //First click (start the selection)
-        if(!firstPoint){
-            firstPoint=true;
-            cor1.x=x;
-            cor1.y=y;
-            cout <<"Corner 1: "<<cor1<<endl;
+        if(!firstSelected){
+
+            firstSelected=true;
+
+            //Setting the first corner
+            firstCorner.x=x;
+            firstCorner.y=y;
+            cout <<"Corner 1: "<<firstCorner<<endl;
         }
+
         //Second click (end the selection)
-        else if(!secondPoint){
-            if((abs(x-cor1.x) > 10) && (abs(y-cor1.y) > 10)){
-                secondPoint=true;
-                //Checking if the point is inside the image and fixing it if it's outside
+        else if(!secondSelected){
+            if((abs(x-firstCorner.x) > 10) && (abs(y-firstCorner.y) > 10)){
+
+                secondSelected=true;
+
+                //Checking if the point is inside the image and fixing it to the border if it's outside
                 if(x >= img.cols) x = img.cols-1;
                 if(x < 0) x = 0;
                 if(y >= img.rows) y = img.rows-1;
                 if(y < 0) y = 0;
 
-                cor2.x=x;
-                cor2.y=y;
-                cout<<"Corner 2: "<<cor2<<endl;
+                //Setting the second corner
+                secondCorner.x=x;
+                secondCorner.y=y;
+                cout<<"Corner 2: "<<secondCorner<<endl;
             }
-            else cout<<"Selection was too small"<<endl;
+            else{
+                cout<<"Selection was too small"<<endl;
+            }
         }
 	}
- 
+
     //Drawing the selection rectangle interactively
-	if(firstPoint & !secondPoint){
+	if(firstSelected & !secondSelected){
 		Point pt(x,y);
 		Mat img_roi=img.clone();
-		cv::rectangle(img_roi,cor1,pt,cv::Scalar(255,255,255), 2);
+		cv::rectangle(img_roi,firstCorner,pt,cv::Scalar(255,255,255), 2);
 		cv::imshow("Original",img_roi);
-	 
 	}
 
-    //Creating the higlighted image
-	if(firstPoint & secondPoint){
+    //Creating the foreground higlighted image when both points have been selected
+	if(firstSelected & secondSelected){
         //New image
         Mat edited = img.clone();
 
         //Getting the ROI rectangle
-		box.width=abs(cor1.x-cor2.x);
-		box.height=abs(cor1.y-cor2.y);
-		box.x=min(cor1.x,cor2.x);
-		box.y=min(cor1.y,cor2.y);
+		box.width=abs(firstCorner.x-secondCorner.x);
+		box.height=abs(firstCorner.y-secondCorner.y);
+
+		box.x=min(firstCorner.x,secondCorner.x);
+		box.y=min(firstCorner.y,secondCorner.y);
 
         //Editing the pixels outside the ROI
         for(int j=0;j<img.rows;j++){
@@ -74,31 +83,34 @@ void on_mouse(int event,int x,int y,int,void*)
                     ptr += 3;
                 }
             }
-        
         }
+
+        //Creating the new window and showing the highlighted image
 		cv::namedWindow("Highlighted");
 		cv::imshow("Highlighted",edited);
-		firstPoint=false;
-		secondPoint=false;
-	 
+		firstSelected=false;
+		secondSelected=false;
 	}
- 
 }
- 
+
+
 int main(int argc, char** argv){
     try{
-        if(argc != 2) {cerr<<"Usage: "<<argv[0]<<" image"<<endl;return 1;} 
+        //Checking for errors
+        if(argc != 2) {cerr<<"Usage: "<<argv[0]<<" image"<<endl;return 1;}
         img=cv::imread(argv[1]);
         if( img.rows==0) {cerr<<"Error reading image"<<endl;return 1;}
+
+        //Creating the window and displaying the image
         cv::namedWindow("Original");
         cv::imshow("Original",img);
-        
-        cv::setMouseCallback("Original",on_mouse); 
-        
+
+        cv::setMouseCallback("Original",on_mouse);
+
         while(char(cv::waitKey(1)!=27));
     }
     catch(exception &ex){
-        
+
     }
     return 0;
 }
