@@ -53,7 +53,7 @@ void on_mouse(int event,int x,int y,int,void*)
 	 
 	}
 
-    //Creating the foreground higlighted image
+    //Creating the higlighted image
 	if(firstPoint & secondPoint){
         //New image
         Mat edited = img.clone();
@@ -77,7 +77,7 @@ void on_mouse(int event,int x,int y,int,void*)
         
         }
 		cv::namedWindow("Highlighted");
-		cv::imshow("Highlighted",edited); //showing the cropped image
+		cv::imshow("Highlighted",edited);
 		firstPoint=false;
 		secondPoint=false;
 	 

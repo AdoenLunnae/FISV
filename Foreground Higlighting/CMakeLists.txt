@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(cv_tutorial)
+PROJECT(Foreground_Highlighting)
 FIND_PACKAGE(OpenCV 	REQUIRED )
 include_directories ("${OpenCV_INCLUDE_DIRS}")
 #Required for uco thinstation. May not be required in your own pc
@@ -14,5 +14,5 @@ ENDIF()
 
 LINK_LIBRARIES(${OpenCV_LIBS} ${XRAND})
 
-add_executable(basic foregroundBasic.cpp)
- 
+add_executable(rectangle foregroundRectangle.cpp)
+add_executable(polygon foregroundPolygon.cpp)
