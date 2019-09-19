@@ -1,14 +1,15 @@
 #ifndef _CMD_LINE_PARSER_HPP_
 #define _CMD_LINE_PARSER_HPP_
-    class CmdLineParser(){
+#include <string>
+    class CmdLineParser{
     private:
         int argc;
         char **argv;
     public:
-        CmdLineParser::CmdLineParser(int _argc,char **_argv);
+        CmdLineParser(int _argc,char **_argv);
 
-        bool CmdLineParser::operator[] (string param);
+        bool operator[] (std::string param);
 
-        string CmdLineParser::operator()(string param,string defvalue="-1");
-    }
+        std::string operator()(std::string param,std::string defvalue="-1");
+    };
 #endif
