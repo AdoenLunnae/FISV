@@ -125,7 +125,7 @@ int main(int argc, char** argv){
     }
 
     img.convertTo(normalized, CV_32F, 1.0/255.0);
-    apply(normalized, normEdited, contrast, gamma, brightness, luma);
+    vectorial?applyVec(normalized, normEdited, contrast, gamma, brightness, luma):apply(normalized, normEdited, contrast, gamma, brightness, luma);
     normEdited.convertTo(edited, img.type(), 255);
     imshow("Processed", edited);
 
@@ -139,5 +139,6 @@ int main(int argc, char** argv){
         }
         imshow("Processed", edited);
     }
+    imwrite(argv[argc-1], edited);
     return 0;
 }
