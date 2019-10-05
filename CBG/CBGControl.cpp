@@ -24,10 +24,6 @@ void updateBrightness(int pos, void* userdata){
     *ptr = (pos/100.0) - 1;
 };
 
-void updateBool(int state, void* ptr){
-    bool *val = (bool*) ptr;
-    *val = state;
-}
 
 void applyVec(const Mat &img, Mat &img2, const float c, const float g, const float b, const bool luma){
     int nChannels = img.channels();
@@ -50,7 +46,9 @@ void applyVec(const Mat &img, Mat &img2, const float c, const float g, const flo
         cvtColor(img2, img2, CV_RGB2HSV);
         split(img2, channels);
         cv::pow(channels[2], g, channels[2]);
-        multiply(channels[2], Scalar(c), channels[2]);
+        multiply(channels[2], S1)I-(g)I_L
+
+calar(c), channels[2]);
         add(channels[2], Scalar(b), channels[2]);
         merge(channels, nChannels, img2);
         cvtColor(img2, img2, CV_HSV2RGB);
@@ -106,6 +104,7 @@ int main(int argc, char** argv){
     if(commands["-i"]) interactive = true;
     if(commands["-luma"]) luma = true;
     if(commands["-vec"]) vectorial = true;
+    
     float oldContrast = contrast,  oldGamma = gamma, oldBrightness = brightness;
     img = imread(argv[argc-2]);
     namedWindow("Processed");
@@ -128,17 +127,19 @@ int main(int argc, char** argv){
     vectorial?applyVec(normalized, normEdited, contrast, gamma, brightness, luma):apply(normalized, normEdited, contrast, gamma, brightness, luma);
     normEdited.convertTo(edited, img.type(), 255);
     imshow("Processed", edited);
-
-    while(waitKey(50) != 27){
-        if((oldContrast != contrast) || (oldGamma != gamma) || (oldBrightness != brightness)){
-            vectorial?
-                applyVec(normalized, normEdited, contrast, gamma, brightness, luma)
-                :apply(normalized, normEdited, contrast, gamma, brightness, luma);
-            normEdited.convertTo(edited, img.type(), 255);
-            oldContrast = contrast,  oldGamma = gamma, oldBrightness = brightness;
+    if(interactive){
+        while(waitKey(50) != 27){
+            if((oldContrast != contrast) || (oldGamma != gamma) || (oldBrightness != brightness)){
+                vectorial?
+                    applyVec(normalized, normEdited, contrast, gamma, brightness, luma)
+                    :apply(normalized, normEdited, contrast, gamma, brightness, luma);
+                normEdited.convertTo(edited, img.type(), 255);
+                oldContrast = contrast,  oldGamma = gamma, oldBrightness = brightness;
+            }
+            imshow("Processed", edited);
         }
-        imshow("Processed", edited);
     }
+
     imwrite(argv[argc-1], edited);
     return 0;
 }
