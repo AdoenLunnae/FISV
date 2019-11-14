@@ -1,6 +1,8 @@
 //! \file test_lbp.cpp
 //! \author FSIV-UCO
 
+#include <cassert>
+#include <fstream>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -29,33 +31,45 @@ int main(int argc, char* argv[])
 
     /// Load the image
     cv::Mat image = cv::imread(parser.get<cv::String>("@image"), cv::IMREAD_GRAYSCALE);
+    bool normalize = true;
 
     /// Compute LBP matrix
-    // TODO
     cv::Mat lbpmat;
     fsiv_lbp(image, lbpmat);
 
     /// Display LBP image
-    // TODO
     fsiv_lbp_disp(lbpmat, "LBP image");
 
     /// Save LBP image to disk
-    // TODO
+    cv::imwrite("lbp_mat.jpeg", lbpmat);
 
     /// Compute the LBP histogram
-    // TODO
     cv::Mat lbp_h1;
-    fsiv_lbp_hist(lbpmat, lbp_h1, true);
+    fsiv_lbp_hist(lbpmat, lbp_h1, normalize);
 
-    // assert(cv::sum(lbp_h1.sum) == 1.0)
+    float sum = 0.0;
+    ofstream f("lbp_hist.txt", ios::out);
+    for (int i = 0; i < lbp_h1.rows; i++) {
+        f << lbp_h1.at<float>({ i, 0 }) << '\n';
+        sum += lbp_h1.at<float>({ i, 0 });
+    }
+    f.close();
+
+    float expected = normalize ? 1.0 : image.rows * image.cols;
+    assert(abs(expected - sum) < 0.0001);
 
     /// Compute the Chi^2 distance between the input image and its mirror
     // TODO
     if (parser.has("image2")) {
-        cv::Mat lbp_h2;
+        cv::Mat lbp_h2, lbp2, image2 = cv::imread(parser.get<cv::String>("image2"), cv::IMREAD_GRAYSCALE);
+        fsiv_lbp(image2, lbp2);
+        cv::imshow("lbp2", lbp2);
+        cv::waitKey(0);
+        fsiv_lbp_hist(lbp2, lbp_h2, normalize);
         float dist = fsiv_chisquared_dist(lbp_h1, lbp_h2);
 
         // Show distance
+        cout << dist;
     }
 
     std::cout << "End! " << std::endl;

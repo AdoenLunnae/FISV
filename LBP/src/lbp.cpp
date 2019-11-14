@@ -28,7 +28,8 @@ void fsiv_lbp(const cv::Mat& imagem, cv::Mat& lbp)
             lbpPtr[j] = 0;
             for (int k = 0; k < 8; ++k) {
                 if (neighbours[k] >= pixel) {
-                    lbpPtr[j] += pow(2, 7 - k);
+                    lbpPtr[j] = lbpPtr[j] | (1 << 7 - k);
+                    //lbpPtr[j] += pow(2, 7 - k);
                 }
             }
         }
@@ -37,13 +38,26 @@ void fsiv_lbp(const cv::Mat& imagem, cv::Mat& lbp)
 
 void fsiv_lbp_hist(const cv::Mat& lbp, cv::Mat& lbp_hist, bool normalize)
 {
-    cv::calcHist(&lbp, 1, { 0 }, cv::Mat(), lbp_hist, 1, { lbp.cols * lbp.rows }, { { 0, 255 } });
-    //cv::calcHist({ lbp }, { 0 }, cv::Mat::zeros(lbp.rows, lbp.cols, CV_8U), lbp_hist, { 256 }, { 0, lbp.rows * lbp.cols });
+    int size = 256;
+    std::vector<cv::Mat> images = { lbp };
+    std::vector<int> channels = { 0 }, sizes = { size };
+    std::vector<float> range = { 0, 256 };
+    cv::calcHist(images, channels, cv::Mat(), lbp_hist, sizes, range);
+    if (normalize) {
+        //cv::normalize(lbp_hist, lbp_hist, 0.0, 1, cv::NORM_L1);
+        lbp_hist = lbp_hist.mul(1.0 / (lbp.cols * lbp.rows));
+    }
 }
 
+//OPTIONAL
 void fsiv_lbp_desc(const cv::Mat& image, cv::Mat& lbp_desc, const int* ncells, bool normalize, bool asrows)
 {
-    ;
+    cv::Size cellSize(image.rows / ncells[0], image.cols / ncells[1]);
+    for (int j = 0; j < image.rows; j += cellSize.height) {
+        for (int i = 0; i < image.cols; i += cellSize.width) {
+            cv::Mat cell(image, cv::Rect(cv::Point(i, j), cellSize));
+        }
+    }
 }
 
 void fsiv_lbp_disp(const cv::Mat& lbpmat, const std::string& winname)
@@ -56,5 +70,16 @@ void fsiv_lbp_disp(const cv::Mat& lbpmat, const std::string& winname)
 
 float fsiv_chisquared_dist(const cv::Mat& h1, const cv::Mat& h2)
 {
-    return -1;
+    float err = 0.0;
+    float xi, yi;
+
+    for (int i = 0; i < h1.rows; i++) {
+        xi = *h1.ptr<float>(i);
+        yi = *h2.ptr<float>(i);
+        if (abs(xi + yi) > 0.00001) {
+            err += (pow(xi - yi, 2) / (xi + yi));
+        }
+    }
+    err *= 0.5;
+    return err;
 }
