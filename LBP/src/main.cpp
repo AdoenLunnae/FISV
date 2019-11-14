@@ -14,9 +14,10 @@
 
 using namespace std;
 
-const cv::String keys = "{help h usage ? |      | print this message   }"
-                        "{@image         |<none>| path to input image.}"
-                        "{image2         |      | path to second image, for comparison.}";
+const cv::String keys = "{help h usage ? |      | print this message.   }"
+                        "{@image         |<none>| path to input image. }"
+                        "{image2         |      | path to second image, for comparison. }"
+                        "{show           |      | show the images. }";
 
 int main(int argc, char* argv[])
 {
@@ -26,9 +27,9 @@ int main(int argc, char* argv[])
         parser.printMessage();
         return 0;
     }
-
     setvbuf(stdout, NULL, _IONBF, 0);
 
+    bool show = parser.has("show");
     /// Load the image
     cv::Mat image = cv::imread(parser.get<cv::String>("@image"), cv::IMREAD_GRAYSCALE);
     bool normalize = true;
@@ -38,7 +39,8 @@ int main(int argc, char* argv[])
     fsiv_lbp(image, lbpmat);
 
     /// Display LBP image
-    fsiv_lbp_disp(lbpmat, "LBP image");
+    if (show)
+        fsiv_lbp_disp(lbpmat, "LBP image");
 
     /// Save LBP image to disk
     cv::imwrite("lbp_mat.jpeg", lbpmat);
@@ -50,29 +52,41 @@ int main(int argc, char* argv[])
     float sum = 0.0;
     ofstream f("lbp_hist.txt", ios::out);
     for (int i = 0; i < lbp_h1.rows; i++) {
-        f << lbp_h1.at<float>({ i, 0 }) << '\n';
-        sum += lbp_h1.at<float>({ i, 0 });
+        f << lbp_h1.at<float>(i, 0) << '\n';
+        sum += lbp_h1.at<float>(i, 0);
     }
     f.close();
 
     float expected = normalize ? 1.0 : image.rows * image.cols;
-    assert(abs(expected - sum) < 0.0001);
+    assert(abs(expected - sum) < 0.001);
+
+    cv::Mat lbp_desc;
+    lbp_desc.convertTo(lbp_desc, CV_32FC1);
+    int cells[] = { 16, 16 };
+    fsiv_lbp_desc(image, lbp_desc, cells, normalize, false);
+
+    f.open("lbp_desc.txt", ios::out);
+    for (int i = 0; i < lbp_desc.rows; i++) {
+        for (int j = 0; j < lbp_desc.cols; j++)
+            f << lbp_desc.at<float>(i, j) << ' ';
+        f << '\n';
+    }
+    f.close();
 
     /// Compute the Chi^2 distance between the input image and its mirror
-    // TODO
     if (parser.has("image2")) {
+        cout << fixed;
         cv::Mat lbp_h2, lbp2, image2 = cv::imread(parser.get<cv::String>("image2"), cv::IMREAD_GRAYSCALE);
         fsiv_lbp(image2, lbp2);
-        cv::imshow("lbp2", lbp2);
-        cv::waitKey(0);
         fsiv_lbp_hist(lbp2, lbp_h2, normalize);
         float dist = fsiv_chisquared_dist(lbp_h1, lbp_h2);
 
         // Show distance
-        cout << dist;
+        cout << dist << scientific;
     }
 
-    std::cout << "End! " << std::endl;
+    if (show)
+        std::cout << "End! " << std::endl;
 
     return 0;
 }
