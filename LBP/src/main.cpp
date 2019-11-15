@@ -17,7 +17,8 @@ using namespace std;
 const cv::String keys = "{help h usage ? |      | print this message.   }"
                         "{@image         |<none>| path to input image. }"
                         "{image2         |      | path to second image, for comparison. }"
-                        "{show           |      | show the images. }";
+                        "{show           |      | show the images. }"
+                        "{u              |      | calculate uniform histogram. }";
 
 int main(int argc, char* argv[])
 {
@@ -29,6 +30,7 @@ int main(int argc, char* argv[])
     }
     setvbuf(stdout, NULL, _IONBF, 0);
 
+    int nbins = 256;
     bool show = parser.has("show");
     /// Load the image
     cv::Mat image = cv::imread(parser.get<cv::String>("@image"), cv::IMREAD_GRAYSCALE);
@@ -45,9 +47,13 @@ int main(int argc, char* argv[])
     /// Save LBP image to disk
     cv::imwrite("lbp_mat.jpeg", lbpmat);
 
+    if (parser.has("u")) {
+        makeUniform(lbpmat);
+        nbins = 59;
+    }
     /// Compute the LBP histogram
     cv::Mat lbp_h1;
-    fsiv_lbp_hist(lbpmat, lbp_h1, normalize);
+    fsiv_lbp_hist(lbpmat, lbp_h1, normalize, nbins);
 
     float sum = 0.0;
     ofstream f("lbp_hist.txt", ios::out);
@@ -58,7 +64,7 @@ int main(int argc, char* argv[])
     f.close();
 
     float expected = normalize ? 1.0 : image.rows * image.cols;
-    assert(abs(expected - sum) < 0.001);
+    assert(abs(expected - sum) < 0.0001);
 
     cv::Mat lbp_desc;
     lbp_desc.convertTo(lbp_desc, CV_32FC1);

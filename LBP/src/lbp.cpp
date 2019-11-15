@@ -7,6 +7,29 @@
 
 using namespace std;
 
+void makeUniform(cv::Mat& mat)
+{
+    int uniform[256] = {
+        0, 1, 2, 3, 4, 58, 5, 6, 7, 58, 58, 58, 8, 58, 9, 10, 11, 58, 58, 58, 58, 58, 58, 58, 12, 58, 58, 58, 13, 58,
+        14, 15, 16, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 17, 58, 58, 58, 58, 58, 58, 58, 18,
+        58, 58, 58, 19, 58, 20, 21, 22, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58,
+        58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 23, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58,
+        58, 58, 24, 58, 58, 58, 58, 58, 58, 58, 25, 58, 58, 58, 26, 58, 27, 28, 29, 30, 58, 31, 58, 58, 58, 32, 58,
+        58, 58, 58, 58, 58, 58, 33, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 34, 58, 58, 58, 58,
+        58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58,
+        58, 35, 36, 37, 58, 38, 58, 58, 58, 39, 58, 58, 58, 58, 58, 58, 58, 40, 58, 58, 58, 58, 58, 58, 58, 58, 58,
+        58, 58, 58, 58, 58, 58, 41, 42, 43, 58, 44, 58, 58, 58, 45, 58, 58, 58, 58, 58, 58, 58, 46, 47, 48, 58, 49,
+        58, 58, 58, 50, 51, 52, 58, 53, 54, 55, 56, 57
+    };
+
+    for (int i = 0; i < mat.rows; ++i) {
+        uchar* ptr = mat.ptr<uchar>(i);
+        for (int j = 0; j < mat.cols; ++j) {
+            ptr[j] = uniform[ptr[j]];
+        }
+    }
+}
+
 void fsiv_lbp(const cv::Mat& imagem, cv::Mat& lbp)
 {
     lbp = *new cv::Mat(imagem.size(), CV_8UC1);
@@ -36,12 +59,12 @@ void fsiv_lbp(const cv::Mat& imagem, cv::Mat& lbp)
     }
 }
 
-void fsiv_lbp_hist(const cv::Mat& lbp, cv::Mat& lbp_hist, bool normalize)
+void fsiv_lbp_hist(const cv::Mat& lbp, cv::Mat& lbp_hist, bool normalize, int nbins)
 {
-    int size = 256;
+    int size = nbins;
     std::vector<cv::Mat> images = { lbp };
     std::vector<int> channels = { 0 }, sizes = { size };
-    std::vector<float> range = { 0, 256 };
+    std::vector<float> range = { 0, (float)nbins };
     cv::calcHist(images, channels, cv::Mat(), lbp_hist, sizes, range);
     if (normalize) {
         //cv::normalize(lbp_hist, lbp_hist, 0.0, 1, cv::NORM_L1);
@@ -50,7 +73,7 @@ void fsiv_lbp_hist(const cv::Mat& lbp, cv::Mat& lbp_hist, bool normalize)
 }
 
 //OPTIONAL
-void fsiv_lbp_desc(const cv::Mat& image, cv::Mat& lbp_desc, const int* ncells, bool normalize, bool asrows)
+void fsiv_lbp_desc(const cv::Mat& image, cv::Mat& lbp_desc, const int* ncells, bool normalize, bool asrows, int nbins)
 {
     cv::Mat lbpMat, partialHist;
     cv::Size cellSize(image.rows / ncells[0], image.cols / ncells[1]);
@@ -60,6 +83,9 @@ void fsiv_lbp_desc(const cv::Mat& image, cv::Mat& lbp_desc, const int* ncells, b
         for (int i = 0; i < image.cols - cellSize.width; i += cellSize.width) {
             cv::Mat cell(image, cv::Rect(cv::Point(i, j), cellSize));
             fsiv_lbp(cell, lbpMat);
+            if (nbins == 59)
+                makeUniform(lbpMat);
+
             fsiv_lbp_hist(lbpMat, partialHist, normalize);
 
             float sum = 0.0;
