@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     cv::Mat lbp_desc;
     lbp_desc.convertTo(lbp_desc, CV_32FC1);
     int cells[] = { 16, 16 };
-    fsiv_lbp_desc(image, lbp_desc, cells, normalize, false);
+    fsiv_lbp_desc(image, lbp_desc, cells, normalize, false, nbins);
 
     f.open("lbp_desc.txt", ios::out);
     for (int i = 0; i < lbp_desc.rows; i++) {
@@ -81,16 +81,17 @@ int main(int argc, char* argv[])
 
     /// Compute the Chi^2 distance between the input image and its mirror
     if (parser.has("image2")) {
-        cout << fixed;
         cv::Mat lbp_h2, lbp2, image2 = cv::imread(parser.get<cv::String>("image2"), cv::IMREAD_GRAYSCALE);
+
         fsiv_lbp(image2, lbp2);
         if (parser.has("u"))
             makeUniform(lbp2);
         fsiv_lbp_hist(lbp2, lbp_h2, normalize, nbins);
+
         float dist = fsiv_chisquared_dist(lbp_h1, lbp_h2);
 
         // Show distance
-        cout << dist << scientific;
+        cout << fixed << dist << scientific;
     }
 
     if (show)

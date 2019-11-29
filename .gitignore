@@ -34,3 +34,4 @@
 # Build directories
 */build/
 *.vscode/
+inria_fsiv/
